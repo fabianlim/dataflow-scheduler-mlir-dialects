@@ -104,6 +104,29 @@ def Dataflow_GetUnitOp:Dataflow_Op<"get_unit",
     }];
 }
 
+// dataflow.get_local_unit: a handle to a compute-local unit
+// (e.g. the PE local register file "lrfreg" used as the matmul K-accumulator).
+// Distinct from get_unit in that the unit is resolved relative to the enclosing
+// program_unit's iter-arg (compute-local), not a global {core,corelet}.
+def Dataflow_GetLocalUnitOp:Dataflow_Op<"get_local_unit",
+  [NoMemoryEffect, IsolatedFromAbove]> {
+    let summary = "Getting a handle to a local unit";
+    let description = [{
+    Gets a handle to a compute-local unit (identified by `name`, e.g. "lrfreg")
+    relative to `unitId`. Used for operations on that unit, such as the local
+    register-file accumulator of a reduction/matmul.
+
+    ```mlir
+    %lrf = dataflow.get_local_unit %arg0 {name = "lrfreg"} : index
+    ```
+    }];
+    let arguments = (ins Index:$unitId, StrAttr:$name);
+    let results = (outs Index:$unit);
+    let assemblyFormat = [{
+         $unitId attr-dict `:` type(results)
+    }];
+}
+
 def Dataflow_ProgramUnitOp:Dataflow_Op<"program_unit",
   [SingleBlockImplicitTerminator<"ReturnOp">]> {
     let summary = "Definition of a unit";

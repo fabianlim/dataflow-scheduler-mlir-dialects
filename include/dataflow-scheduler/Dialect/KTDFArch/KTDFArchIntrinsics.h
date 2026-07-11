@@ -31,6 +31,13 @@
 
 #include "dataflow-scheduler/Dialect/KTDFArch/KTDFArchAttributes.h"
 
+// With BUILD_SHARED_LIBS=ON, LLVM compiles with -fvisibility=hidden. Template
+// base classes (IntrinsicAttr, FeatureAttr) would otherwise get hidden
+// visibility from their type arguments, causing GCC to warn that concrete
+// derived structs have greater (default) visibility than their base. Force
+// default visibility for all type definitions in this header.
+#pragma GCC visibility push(default)
+
 namespace mlir::ktdf_arch {
 
 using GetAttrNameFn = StringAttr (KTDFArchDialect::*)() const;
@@ -236,5 +243,7 @@ struct Queue : FeatureAttr<&KTDFArchDialect::getFeatureQueueAttrName> {
 }  // namespace feature
 
 }  // namespace mlir::ktdf_arch
+
+#pragma GCC visibility pop
 
 #endif  // DATAFLOW_SCHEDULER_DIALECT_KTDFARCH_KTDFARCHINTRINSICS_H_

@@ -63,7 +63,8 @@ def KTDFArch_Dialect : Dialect {
   defvar intrinsicFeatures = [
     KTDFArch_IntrinsicFeature<"compute">,
     KTDFArch_IntrinsicFeature<"simd", "SIMD">,
-    KTDFArch_IntrinsicFeature<"queue">
+    KTDFArch_IntrinsicFeature<"queue">,
+    KTDFArch_IntrinsicFeature<"local_to_compute">
   ];
 
   let extraClassDeclaration = [{

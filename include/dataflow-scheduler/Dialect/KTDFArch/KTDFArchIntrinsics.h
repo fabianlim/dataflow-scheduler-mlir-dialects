@@ -233,6 +233,15 @@ struct Queue : FeatureAttr<&KTDFArchDialect::getFeatureQueueAttrName> {
   }
 };
 
+/// Indicates compute-unit-local storage with a non-bump-allocated strategy
+/// (e.g., SFU register file). Valid on memory or execution unit resources.
+struct LocalToCompute
+    : FeatureAttr<&KTDFArchDialect::getFeatureLocalToComputeAttrName> {
+  using FeatureAttr::FeatureAttr;
+  auto verify(EmitErrorFn emit_error) const -> LogicalResult;
+  [[nodiscard]] auto test(LocalToCompute requirements) const -> bool;
+};
+
 }  // namespace feature
 
 }  // namespace mlir::ktdf_arch

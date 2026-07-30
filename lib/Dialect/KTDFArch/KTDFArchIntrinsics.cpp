@@ -366,3 +366,44 @@ auto feature::Queue::test(Queue requirements) const -> bool {
 
   return true;
 }
+
+//===----------------------------------------------------------------------===//
+// feature::LocalToCompute
+//===----------------------------------------------------------------------===//
+
+auto KTDFArchDialect::verifyFeatureLocalToComputeAttr(
+    Operation* op, const NamedAttribute& attr) -> LogicalResult {
+  const auto emit_error = [&]() -> InFlightDiagnostic {
+    return emitIntrinsicError(op, attr);
+  };
+
+  // Allow on MemoryOp OR ExecutionUnitOp (unlike compute/simd which only allow exec_unit)
+  if (isa<KTDFArchDialect>(op->getDialect()) &&
+      !isa<MemoryOp, ExecutionUnitOp>(op)) {
+      return emit_error() << "'ktdf_arch.feature.local_to_compute' is only valid "
+                            "on memory or execution unit resources";
+    }
+
+  const auto value = dyn_cast<feature::LocalToCompute>(attr.getValue());
+  if (!value) {
+    return emit_error() << "requires a unit or dictionary attribute";
+  }
+
+  return value.verify(emit_error);
+}
+
+auto feature::LocalToCompute::verify(EmitErrorFn /*emit_error*/) const
+    -> LogicalResult {
+  return mlir::success();
+}
+
+auto KTDFArchDialect::testFeatureLocalToCompute(Attribute provided,
+                                                const Feature& required)
+    -> bool {
+  return provided == required.getValue();
+}
+
+auto feature::LocalToCompute::test(LocalToCompute /*requirements*/) const
+    -> bool {
+  return true;
+}

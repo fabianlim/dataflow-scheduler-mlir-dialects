@@ -367,6 +367,32 @@ auto MemoryOp::verify() -> LogicalResult {
     return emitOpError("attribute 'kind' requires valid memory space");
   }
 
+  // Only a memory that the backend names instead of addressing may carry a
+  // 'unit_name', and it is named precisely because it is private to a compute
+  // unit: the unit accessing it is the handle. Both halves of that notion are
+  // decidable from the immediately enclosing scope, so check them there.
+  // Inherent attributes are type-erased in storage, so ask for the attribute
+  // rather than its value: the generated accessor casts unconditionally.
+  if (getUnitNameAttr()) {
+    auto group = dyn_cast<GroupOp>((*this)->getParentOp());
+    if (!group || group.getSharedExec().empty()) {
+      return emitOpError(
+          "attribute 'unit_name' requires the memory to be private to a "
+          "compute unit, but its enclosing scope yields no execution unit");
+    }
+
+    for (auto* user : getResult().getUsers()) {
+      if (auto nested = dyn_cast<GroupOp>(user)) {
+        auto diag = emitOpError(
+            "attribute 'unit_name' requires the memory to be private to a "
+            "compute unit, but it is captured by a nested group, making it "
+            "private to a deeper scope");
+        diag.attachNote(nested.getLoc()) << "captured here";
+        return diag;
+      }
+    }
+  }
+
   return success();
 }
 

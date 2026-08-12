@@ -391,7 +391,10 @@ def KTDFArch_MemoryOp : KTDFArch_NodeOp<
   "memory", 
   KTDFArch_MemoryType, 
   [],
-  (ins OptionalAttr<ConfinedAttr<AnyI64Attr, [IntMinValue<1>]>>:$size)
+  (ins
+    OptionalAttr<ConfinedAttr<AnyI64Attr, [IntMinValue<1>]>>:$size,
+    OptionalAttr<StrAttr>:$unit_name
+  )
 > {
   let summary = "Defines a memory resource.";
   let description = [{
@@ -409,11 +412,24 @@ def KTDFArch_MemoryOp : KTDFArch_NodeOp<
 
     Memories can have an optional `size` >= 1, specified in bytes.
 
+    Memories can have an optional `unit_name`, which spells out how the backend
+    refers to this resource. It is only meaningful for a memory that is private
+    to a compute unit, i.e., whose deepest legal scope is a group yielding an
+    execution unit, because only such a memory is named rather than addressed:
+    the compute unit accessing it is itself the handle. Declaring it on any
+    other memory is an error.
+
     Example:
     ```
     ktdf_arch.device @my_device {
       %ram = memory { kind = #ptr.generic_space }
       %ddr = memory { kind = "DDR", size = 17179869184 }
+
+      %compute = group share() {
+        %regs = memory { kind = "REG", size = 2048, unit_name = "reg_file" }
+        %unit = exec_unit
+        yield %unit
+      } -> exec_unit
     }
     ```
   }];
@@ -422,14 +438,18 @@ def KTDFArch_MemoryOp : KTDFArch_NodeOp<
 
   let skipDefaultBuilders = 1;
   let builders = [
-    OpBuilder<(ins 
-        "Attribute":$kind, 
-        CArg<"std::optional<int64_t>", "std::nullopt">:$size
+    OpBuilder<(ins
+        "Attribute":$kind,
+        CArg<"std::optional<int64_t>", "std::nullopt">:$size,
+        CArg<"StringRef", "{}">:$unit_name
     ), [{
       $_state.types.push_back(MemoryType::get($_builder.getContext()));
       $_state.addAttribute(getKindAttrName($_state.name), kind);
       if (size) {
         $_state.addAttribute(getSizeAttrName($_state.name), $_builder.getI64IntegerAttr(*size));
+      }
+      if (!unit_name.empty()) {
+        $_state.addAttribute(getUnitNameAttrName($_state.name), $_builder.getStringAttr(unit_name));
       }
     }]>
   ];

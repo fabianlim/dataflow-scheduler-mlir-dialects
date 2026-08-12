@@ -96,3 +96,35 @@ ktdf_arch.device @transfer_granularity_repeated {
   // expected-error@+1 {{repeated granularity (1)}}
   datapath { ktdf_arch.transfer_granularity = array<i64: 1, 1> } %a to %b : exec_unit, exec_unit
 }
+
+// -----
+
+ktdf_arch.device @unit_name_at_device_scope {
+  // expected-error@+1 {{attribute 'unit_name' requires the memory to be private to a compute unit, but its enclosing scope yields no execution unit}}
+  memory { kind = "A", unit_name = "reg_file" }
+}
+
+// -----
+
+ktdf_arch.device @unit_name_without_exec_unit {
+  group share() {
+    // expected-error@+1 {{attribute 'unit_name' requires the memory to be private to a compute unit, but its enclosing scope yields no execution unit}}
+    memory { kind = "A", unit_name = "reg_file" }
+  }
+}
+
+// -----
+
+ktdf_arch.device @unit_name_captured_downward {
+  group share() {
+    // expected-error@+1 {{attribute 'unit_name' requires the memory to be private to a compute unit, but it is captured by a nested group, making it private to a deeper scope}}
+    %regs = memory { kind = "A", unit_name = "reg_file" }
+    // expected-note@+1 {{captured here}}
+    group share(%regs) {
+      %helper = exec_unit
+      datapath %regs to %helper : memory, exec_unit
+    }
+    %unit = exec_unit
+    yield %unit
+  } -> exec_unit
+}

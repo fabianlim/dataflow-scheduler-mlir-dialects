@@ -79,6 +79,12 @@ ktdf_arch.device @my_device {
 ktdf_arch.device @my_device {
   %ram = memory { kind = #ptr.generic_space }
   %ddr = memory { kind = "DDR", size = 17179869184 }
+
+  %compute = group share() {
+    %regs = memory { kind = "REG", size = 2048, unit_name = "reg_file" }
+    %unit = exec_unit
+    yield %unit
+  } -> exec_unit
 }
 
 // -----

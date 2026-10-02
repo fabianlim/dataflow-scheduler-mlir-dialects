@@ -279,6 +279,7 @@ def Agen_VectorStoreOp : Agen_Op<"vector_store", [
 }
 
 def Agen_CompositeLoadAndStoreOp : Agen_Op<"composite_load_and_store", [
+    RecursiveMemoryEffects,
     MemRefsNormalizable,
     ImplicitAgenTerminator,
     DeclareOpInterfaceMethods<AffineMapAccessInterface, ["getAffineMapAttrForMemRef"]>,
@@ -421,6 +422,7 @@ def Agen_CompositeLoadAndStoreOp : Agen_Op<"composite_load_and_store", [
 }
 
 def Agen_CompositeLoadOp:Agen_Op<"composite_load", [
+    RecursiveMemoryEffects,
     DeclareOpInterfaceMethods<AffineMapAccessInterface>,
     MemRefsNormalizable,
     ImplicitAgenTerminator,
@@ -485,6 +487,7 @@ def Agen_CompositeLoadOp:Agen_Op<"composite_load", [
 }
 
 def Agen_CompositeStoreOp:Agen_Op<"composite_store", [
+    RecursiveMemoryEffects,
     DeclareOpInterfaceMethods<AffineMapAccessInterface>,
     MemRefsNormalizable,
     ImplicitAgenTerminator,
@@ -556,7 +559,8 @@ def Agen_CompositeStoreOp:Agen_Op<"composite_store", [
 }
 
 def Agen_CompositeIndirectLoadAndStoreOp:Agen_Op<"composite_indirect_load_and_store",
-        [MemRefsNormalizable,
+        [RecursiveMemoryEffects,
+        MemRefsNormalizable,
         ImplicitAgenTerminator,
         AttrSizedOperandSegments,
         Dataflow_DebugNameOpInterface]> {
@@ -675,7 +679,8 @@ def Agen_CompositeIndirectLoadAndStoreOp:Agen_Op<"composite_indirect_load_and_st
 }
 
 def Agen_CompositeIndirectLoadOp:Agen_Op<"composite_indirect_load",
-        [MemRefsNormalizable,
+        [RecursiveMemoryEffects,
+        MemRefsNormalizable,
         ImplicitAgenTerminator,
         AttrSizedOperandSegments,
         Dataflow_DebugNameOpInterface]> {
@@ -756,7 +761,8 @@ def Agen_CompositeIndirectLoadOp:Agen_Op<"composite_indirect_load",
 }
 
 def Agen_CompositeIndirectStoreOp:Agen_Op<"composite_indirect_store",
-        [MemRefsNormalizable,
+        [RecursiveMemoryEffects,
+        MemRefsNormalizable,
         ImplicitAgenTerminator,
         AttrSizedOperandSegments,
         Dataflow_DebugNameOpInterface]> {

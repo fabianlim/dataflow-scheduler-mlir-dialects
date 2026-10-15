@@ -29,6 +29,7 @@ include "mlir/Interfaces/DestinationStyleOpInterface.td"
 include "mlir/Interfaces/InferTypeOpInterface.td"
 include "mlir/Interfaces/LoopLikeInterface.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
+include "mlir/IR/BuiltinAttributeInterfaces.td"
 include "mlir/IR/OpAsmInterface.td"
 
 include "dataflow-scheduler/Dialect/KTDF/KTDFAttributes.td"
@@ -1369,6 +1370,51 @@ def KTDF_SelectMemrefOp : KTDF_Op<"select_memref", [
 
   let hasVerifier = 1;
   let hasFolder = 1;
+}
+
+//===----------------------------------------------------------------------===//
+// Register Operations
+//===----------------------------------------------------------------------===//
+
+def KTDF_InitRegisterOp : KTDF_Op<"init_register", [
+    TypesMatchWith<"type of 'value' matches element type of 'result'",
+                   "result", "value",
+                   "::llvm::cast<::mlir::MemRefType>($_self).getElementType()">
+  ]> {
+  let summary = "Allocate a register filled with a constant";
+  let description = [{
+    The `ktdf.init_register` operation allocates a register and fills every
+    element of it with `value`. The fill is performed by the execution unit
+    named by `unit`.
+
+    The result is a statically shaped memref of the type of `value`. The
+    register is allocated in the result type's memory space.
+
+    The operation allocates its result, so two operations with equal value,
+    unit and type produce two distinct registers. An operation whose result is
+    unused is trivially dead.
+
+    Example:
+    ```mlir
+    %reg = ktdf.init_register 0.000000e+00 : f16 on "SFU"
+        -> memref<64xf16, "SFU_REG">
+    ```
+  }];
+
+  let arguments = (ins
+    TypedAttrInterface:$value,
+    StrAttr:$unit
+  );
+
+  let results = (outs
+    Res<AnyStaticShapeMemRef, "the filled register",
+        [MemAlloc<DefaultResource, 0, FullEffect>,
+         MemWrite<DefaultResource, 0, FullEffect>]>:$result
+  );
+
+  let assemblyFormat = [{
+    $value `on` $unit attr-dict `->` type($result)
+  }];
 }
 
 //===----------------------------------------------------------------------===//
